@@ -58,6 +58,7 @@
 #include "rateSupervisor.h"
 
 static bool isInit;
+static bool motorOverride = true;
 
 static uint32_t inToOutLatency;
 
@@ -350,11 +351,24 @@ static void stabilizerTask(void* param)
 
       // Critical for safety, be careful if you modify this code!
       // The supervisor will already set thrust to 0 in the setpoint if needed, but to be extra sure prevent motors from running.
-      if (areMotorsAllowedToRun) {
-        controlMotors(&control);
-      } else {
-        motorsStop();
+
+      if (motorOverride)
+      {
+        if (!areMotorsAllowedToRun) {
+          motorsStop();  // still keep safety
+        }
       }
+      else
+      {
+        controller(&control, &setpoint, &sensorData, &state, stabilizerStep);
+
+        if (areMotorsAllowedToRun) {
+          controlMotors(&control);
+        } else {
+          motorsStop();
+        }
+      }
+
 
       // Compute compressed log formats
       compressState();
@@ -868,3 +882,9 @@ LOG_ADD(LOG_INT32, m3req, &motorThrustBatCompUncapped.motors.m3)
  */
 LOG_ADD(LOG_INT32, m4req, &motorThrustBatCompUncapped.motors.m4)
 LOG_GROUP_STOP(motor)
+
+PARAM_GROUP_START(motorOverride)
+
+PARAM_ADD(PARAM_UINT8, enable, &motorOverride)
+
+PARAM_GROUP_STOP(motorOverride)

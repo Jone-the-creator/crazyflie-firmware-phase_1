@@ -95,6 +95,7 @@ static StaticSemaphore_t canStartMutexBuffer;
 
 /* Private functions */
 static void systemTask(void *arg);
+extern void motorsCrtpInit(void);
 
 /* Public functions */
 void systemLaunch(void)
@@ -189,6 +190,7 @@ void systemTask(void *arg)
   systemInit();
   commInit();
   commanderInit();
+  motorsCrtpInit();
 
   StateEstimatorType estimator = StateEstimatorTypeAutoSelect;
 
